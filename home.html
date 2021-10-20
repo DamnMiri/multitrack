@@ -1,0 +1,161 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <link href="https://vjs.zencdn.net/7.10.2/video-js.min.css" rel="stylesheet">
+<script src="https://vjs.zencdn.net/7.10.2/video.min.js"></script>
+</head>
+
+<body style="margin-top: 100px;display: flex;flex-direction: column;align-items: center;justify-content: center;">
+<video  
+    id="video-player"
+    class="video-js vjs-big-play-centered"
+    controls
+    preload="auto"
+    data-setup='{}'>
+  <source src="oceans.mp4" type="video/mp4"></source>
+  <p class="vjs-no-js">
+    To view this video please enable JavaScript, and consider upgrading to a
+    web browser that
+    <a href="https://videojs.com/html5-video-support/" target="_blank">
+      supports HTML5 video
+    </a>
+  </p>
+</video>
+<div id="div_audio" style="margin-top: 15px;width: 25%;display: flex;flex-direction:column;"></div>
+</body>
+
+<style>
+  .custom-btn {
+    margin: 3px;
+    text-transform: uppercase;
+    font-weight: bold;
+    transition-duration: 0.4s;
+  }
+
+   .custom-btn-selected {
+    background-color: #008CBA;
+    color: white;
+  }
+
+</style>
+
+<script>
+class AudioObj {
+  active = false;
+  constructor(name, obj, id){
+    this.name = name;
+    this.obj = obj;
+    this.id = id;
+  }
+}
+
+let div_btn = document.getElementById("div_audio");
+
+let tracks  = ["miki", "duck", "zeb"];
+let audio_objs = [];
+for (var i = 0; i <tracks.length; i++) {
+  let audio_tag = document.createElement("audio");
+  audio_tag.preload = "auto";
+  audio_tag.src = tracks[i] + ".mp3";
+  audio_tag.id = "track_id_" + i;
+  let btn = document.createElement("button");
+  btn.innerText = tracks[i];
+  btn.classList.add("custom-btn");
+  btn.setAttribute("track_id", i);
+  div_btn.appendChild(audio_tag);
+  div_btn.appendChild(btn);
+  btn.onclick = activateTrack;
+  let audio_obj = new AudioObj(tracks[i], audio_tag, i);
+  audio_objs.push(audio_obj);
+}
+let firstplay = false;
+
+function activateTrack()
+{
+  let track_id = this.getAttribute("track_id");
+  let audio = getObjFromTrackId(track_id);
+  let curTime = player.currentTime();
+  if(audio.active)
+  {
+    this.classList.remove("custom-btn-selected");
+    audio.obj.pause();
+    audio.active = false;
+  }
+  else if(firstplay)
+  {
+    this.classList.add("custom-btn-selected");
+    audio.obj.currentTime = curTime;
+    audio.obj.play();
+    audio.active = true;
+  }
+}
+
+function getObjFromTrackId(track_id){
+  for (var i = 0; i <audio_objs.length; i++) {
+    if (audio_objs[i].id == track_id)
+      return audio_objs[i];
+  }
+}
+
+function playAll() {
+  for (var i = 0; i <audio_objs.length; i++) {
+    if (audio_objs[i].active)
+      audio_objs[i].obj.play();
+  }
+}
+
+function pauseAll() {
+  for (var i = 0; i <audio_objs.length; i++) {
+    if (audio_objs[i].active)
+      audio_objs[i].obj.pause();
+  }
+}
+
+function seekAll() {
+  let curTime = player.currentTime();
+  for (var i = 0; i <audio_objs.length; i++) {
+    if (audio_objs[i].active)
+      audio_objs[i].obj.currentTime = curTime;
+  }
+}
+
+function volumeAll() {
+  let volume = player.volume();
+  let muted = player.muted();
+  for (var i = 0; i <audio_objs.length; i++) {
+    if (audio_objs[i].active)
+      audio_objs[i].obj.volume = volume;
+    if(muted)
+      audio_objs[i].obj.muted = true;
+    else
+      audio_objs[i].obj.muted = false;
+  }
+}
+
+var options = {};
+
+var player = videojs('video-player', options, function onPlayerReady() {
+  videojs.log('Your player is ready!');
+
+  this.on('play', function() {
+    firstplay = true;
+    playAll();
+  });
+
+    this.on('pause', function() {
+    pauseAll();
+  });
+
+    this.on('seeked', function() {
+    seekAll();
+  });
+
+    this.on('volumechange', function() {
+    volumeAll();
+  });
+});
+</script>
+
+</html>
